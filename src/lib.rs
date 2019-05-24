@@ -8,16 +8,25 @@ use bitvec::{
 
 use std::iter::Iterator;
 
+/*
+returns the two's complement of `val`
+*/
 fn twos_complement(val: u32) -> u32 {
     !val + 1u32
 }
 
+/*
+bit_add(a, b, carry in) -> (sum, carry out);
+*/
 fn bit_add(a: bool, b: bool, cin: bool) -> (/*s*/ bool, /*cout*/ bool) {
     let s = cin ^ ( a ^ b);
     let cout = (a & b) | ((a ^ b) & cin);
     (s, cout)
 }
 
+/*
+gets a four byte array representing a u32
+*/
 fn get_bytes(bits: &mut BitVec::<LittleEndian, u8>) -> [u8; 4] {
     eprintln!("{}", bits);
     let mut output: [u8; 4] = [0; 4];
@@ -28,6 +37,9 @@ fn get_bytes(bits: &mut BitVec::<LittleEndian, u8>) -> [u8; 4] {
     return output;
 }
 
+/*
+bin_add(x, y) -> sum(x + y)
+*/
 pub fn bin_add(x: u32, y: u32) -> u32 {
 
     let (xbits, ybits) = (BitVec::<LittleEndian, u32>::from_element(x), BitVec::<LittleEndian, u32>::from_element(y));
@@ -50,6 +62,9 @@ pub fn bin_add(x: u32, y: u32) -> u32 {
 
 }
 
+/*
+bin_sub(x, y) -> difference(x - y)
+*/
 pub fn bin_sub(x: u32, y: u32) -> Result<u32, i32> {
     if y > x {
         Err(bin_add(x, twos_complement(y)) as i32)
@@ -58,7 +73,9 @@ pub fn bin_sub(x: u32, y: u32) -> Result<u32, i32> {
     }
 }
 
-
+/*
+bin_mul(x, y) -> product(x * y)
+*/
 pub fn bin_mul(x: u32, y: u32) -> u32 {
     let mut total: u32 = 0;
     for _ in 0..y {
@@ -67,6 +84,9 @@ pub fn bin_mul(x: u32, y: u32) -> u32 {
     return total;
 }
 
+/*
+bin_div(numerator, denominator) -> (quotient, remainder)
+*/
 pub fn bin_div(num: u32, div: u32) -> (/*Quotient*/ u32, /*Remainder*/ u32) {
 
     let mut quotient = 0;

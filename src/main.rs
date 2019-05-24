@@ -1,100 +1,45 @@
-#![feature(reverse_bits)]
-extern crate bitvec;
-extern crate itertools;
+mod lib;
 
-use bitvec::{
-    vec::BitVec,
-    cursor::LittleEndian,
-};
-
-use std::iter::FromIterator;
-use itertools::Either;
-
-fn twos_complement(val: u32) -> u32 {
-    !val + 1u32
-}
-
-fn bit_add(a: bool, b: bool, cin: bool) -> (/*s*/ bool, /*cout*/ bool) {
-    let s = cin ^ ( a ^ b);
-    let cout = (a & b) | ((a ^ b) & cin);
-    (s, cout)
-}
-
-fn assemble_byte(mut v: Vec::<bool>) -> u8 {
-    v.reverse();
-    let mut output: u8 = 0;
-    for bit in v {
-        output = {
-            let shift = output << 1;
-            let bit = match bit {
-                true => 1u8,
-                false => 0u8,
-            };
-            shift | bit
-        };
+#[cfg(test)]
+mod tests {
+    use crate::lib::*;
+    #[test]
+    fn add() {
+        assert_eq!(bin_add(10, 11), 21);
+        assert_eq!(bin_add(1313230, 1424211), 2737441);
+        assert_eq!(bin_add(1, 14), 15);
+        assert_eq!(bin_add(4410, 11), 4421);
+        assert_eq!(bin_add(6, 51), 57);
+        assert_eq!(bin_add(1051423, 14451561), 15502984);
     }
-    output
-}
 
-fn get_bytes(bits: &mut BitVec::<LittleEndian, u8>) -> [u8; 4] {
-    let mut output: [u8; 4] = [0; 4];
-    for i in 0..4 { 
-        output[i] = assemble_byte(Vec::from_iter(bits.drain(0..8).into_iter()));
+    #[test]
+    fn sub() {
+        assert_eq!(bin_sub(10, 11), Err(-1));
+        assert_eq!(bin_sub(1313230, 1424211), Err(-110981));
+        assert_eq!(bin_sub(1, 14), Err(-13));
+        assert_eq!(bin_sub(4410, 11), Ok(4399));
+        assert_eq!(bin_sub(51, 6), Ok(45));
+        assert_eq!(bin_sub(14451561, 1051423), Ok(13400138));
     }
-    return output;
-}
 
-pub fn bin_add(x: u32, y: u32) -> u32 {
-
-    let (xbits, ybits) = (BitVec::<LittleEndian, u32>::from_element(x), BitVec::<LittleEndian, u32>::from_element(y));
-
-    let mut bits = BitVec::<LittleEndian, u8>::with_capacity(32);
-    let mut carry: bool = false;
-    for (xbit, ybit) in xbits
-                                 .clone()
-                                 .iter()
-                                 .zip(ybits.clone().iter())
-    {
-        let (sum, cout) = bit_add(xbit, ybit, carry);
-        bits.push(sum);
-        carry = cout;
+    #[test]
+    fn mul() {
+        assert_eq!(bin_mul(10, 11), 110);
+        assert_eq!(bin_mul(1313230, 14), 18385220);
+        assert_eq!(bin_mul(1, 14), 14);
+        assert_eq!(bin_mul(4410, 11), 48510);
+        assert_eq!(bin_mul(6, 51), 306);
+        assert_eq!(bin_mul(1051423, 1445), 1519306235);
     }
-    
-    let output = u32::from_le_bytes(get_bytes(&mut bits));
 
-    return output;    
-
-}
-
-pub fn bin_sub(x: u32, y: u32) -> Either<u32, i32> {
-    if y > x {
-        Either::Right(bin_add(x, twos_complement(y)) as i32)
-    } else {
-        Either::Left(bin_add(x, twos_complement(y)))
+    #[test]
+    fn div() {
+        assert_eq!(bin_div(10, 11), (0, 10));
+        assert_eq!(bin_div(131, 14), (9, 5));
+        assert_eq!(bin_div(1, 14), (0, 1));
+        assert_eq!(bin_div(440, 11), (40, 0));
+        assert_eq!(bin_div(6, 51), (0, 6));
+        assert_eq!(bin_div(10514, 500), (21, 14));
     }
 }
-
-
-pub fn bin_mul(x: u32, y: u32) -> u32 {
-    let mut total: u32 = 0;
-    for _ in 0..y {
-        total = bin_add(total, x);
-    }
-    return total;
-}
-
-
-pub fn bin_div() {
-
-}
-
-
-
-
-fn main() {
-    eprintln!("{}", bin_mul(10u32, 32u32));
-    // let (x, y) = (11, 5);
-    // for i in 0..100 {
-    //     eprintln!("bin_add({}, {}) -> {}", x, i, bin_add(x, i));
-    // }
-} 

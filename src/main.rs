@@ -1,8 +1,10 @@
+extern crate rand;
 mod lib;
 
 #[cfg(test)]
 mod tests {
     use crate::lib::*;
+    use rand::prelude::*;
     #[test]
     fn add() {
         assert_eq!(bin_add(10, 11), 21);
@@ -11,6 +13,15 @@ mod tests {
         assert_eq!(bin_add(4410, 11), 4421);
         assert_eq!(bin_add(6, 51), 57);
         assert_eq!(bin_add(1051423, 14451561), 15502984);
+    }
+
+    #[test]
+    fn add_random() {
+        let mut rng = thread_rng();
+        for _ in 0..100 {
+            let (x, y) = (rng.gen::<u16>() as u32, rng.gen::<u16>() as u32);
+            assert_eq!(bin_add(x, y), x + y);
+        }
     }
 
     #[test]
@@ -24,6 +35,20 @@ mod tests {
     }
 
     #[test]
+    fn sub_random() {
+        let mut rng = thread_rng();
+        for _ in 0..100 {
+            let (x, y) = (rng.gen::<u16>() as u32, rng.gen::<u16>() as u32);
+            assert_eq!(bin_sub(x, y), {
+                match x < y {
+                    false => Ok(x - y),
+                    _     => Err(x as i32 - y as i32),
+                }
+            });
+        }
+    }
+
+    #[test]
     fn mul() {
         assert_eq!(bin_mul(10, 11), 110);
         assert_eq!(bin_mul(1313230, 14), 18385220);
@@ -31,6 +56,16 @@ mod tests {
         assert_eq!(bin_mul(4410, 11), 48510);
         assert_eq!(bin_mul(6, 51), 306);
         assert_eq!(bin_mul(1051423, 1445), 1519306235);
+    }
+
+
+    #[test]
+    fn mul_random() {
+        let mut rng = thread_rng();
+        for _ in 0..100 {
+            let (x, y) = (rng.gen::<u16>() as u32, rng.gen::<u16>() as u32);
+            assert_eq!(bin_mul( x, y), x * y);
+        }
     }
 
     #[test]
@@ -42,4 +77,5 @@ mod tests {
         assert_eq!(bin_div(6, 51), (0, 6));
         assert_eq!(bin_div(10514, 500), (21, 14));
     }
+
 }

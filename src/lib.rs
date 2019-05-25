@@ -1,5 +1,4 @@
 extern crate bitvec;
-extern crate itertools;
 
 use bitvec::{
     vec::BitVec,
@@ -28,7 +27,7 @@ fn bit_add(a: bool, b: bool, cin: bool) -> (/*s*/ bool, /*cout*/ bool) {
 gets a four byte array representing a u32
 */
 fn get_bytes(bits: &mut BitVec::<LittleEndian, u8>) -> [u8; 4] {
-    eprintln!("{}", bits);
+    // eprintln!("{}", bits);
     let mut output: [u8; 4] = [0; 4];
     let bytes = bits.clone().into_vec();
     for i in 0..4 { 
@@ -76,12 +75,14 @@ pub fn bin_sub(x: u32, y: u32) -> Result<u32, i32> {
 /*
 bin_mul(x, y) -> product(x * y)
 */
-pub fn bin_mul(x: u32, y: u32) -> u32 {
-    let mut total: u32 = 0;
-    for _ in 0..y {
-        total = bin_add(total, x);
+pub fn bin_mul(mut x: u32, mut y: u32) -> u32 {
+    let mut product: u32 = 0;
+    while y != 0 {
+        if (y & 1u32) == 1 { product = bin_add(x, product) }
+        x <<= 1u32;
+        y >>= 1u32;
     }
-    return total;
+    return product;
 }
 
 /*
@@ -94,8 +95,6 @@ pub fn bin_div(num: u32, div: u32) -> (/*Quotient*/ u32, /*Remainder*/ u32) {
     let mut current = num;
     loop {
         if current < div {
-            eprintln!("current -> {}; div -> {};", current, div);
-            eprintln!("current < div: {} < {} == {}", current, div, current < div);
             remainder = current;
             break;
         } else {
